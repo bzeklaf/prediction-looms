@@ -99,12 +99,12 @@ export const SignalList = () => {
             stake: signal.stake_amount,
             stakeToken: signal.stake_token,
             resolutionTime: new Date(signal.resolution_time),
-            category: signal.category,
+            category: signal.category as 'crypto' | 'macro' | 'rwa',
             isLocked: signal.is_locked && !isUnlocked,
             unlockPrice: signal.unlock_price,
             alphaScore: signal.profiles?.alpha_score || 50,
             timeHorizon: signal.time_horizon,
-            status: signal.status,
+            status: signal.status as 'active' | 'resolved' | 'cancelled',
             accuracy: signal.resolution_result !== null ? (signal.resolution_result ? 1 : 0) : undefined,
           };
 

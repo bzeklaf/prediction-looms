@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -50,7 +49,7 @@ export const useSignals = () => {
         .from('signals')
         .select(`
           *,
-          profiles (
+          profiles!creator_id (
             username,
             alpha_score
           )
@@ -58,7 +57,7 @@ export const useSignals = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data;
+      return data as Signal[];
     },
   });
 };
