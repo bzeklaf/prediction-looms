@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -81,21 +80,49 @@ export const useSignals = () => {
       console.log('Signals fetched successfully:', data);
       
       // Transform the data to handle potential profile errors
-      const transformedData = data.map(signal => {
-        // Check if profiles is valid
-        const hasValidProfiles = signal.profiles && 
-                                typeof signal.profiles === 'object' && 
-                                signal.profiles !== null &&
-                                !('error' in signal.profiles) &&
-                                'username' in signal.profiles;
+      const transformedData: Signal[] = data.map(signal => {
+        // Check if profiles is valid and has the expected structure
+        const profilesData = signal.profiles;
+        let validProfiles: { username: string; alpha_score: number } | null = null;
+        
+        if (profilesData && 
+            typeof profilesData === 'object' && 
+            profilesData !== null &&
+            !('error' in profilesData) &&
+            'username' in profilesData &&
+            'alpha_score' in profilesData &&
+            typeof profilesData.username === 'string' &&
+            typeof profilesData.alpha_score === 'number') {
+          validProfiles = {
+            username: profilesData.username,
+            alpha_score: profilesData.alpha_score
+          };
+        }
         
         return {
-          ...signal,
-          profiles: hasValidProfiles ? signal.profiles : null
+          id: signal.id,
+          creator_id: signal.creator_id,
+          title: signal.title,
+          description: signal.description,
+          prediction: signal.prediction,
+          confidence: signal.confidence,
+          stake_amount: signal.stake_amount,
+          stake_token: signal.stake_token,
+          category: signal.category as 'crypto' | 'macro' | 'rwa',
+          time_horizon: signal.time_horizon,
+          resolution_time: signal.resolution_time,
+          is_locked: signal.is_locked,
+          unlock_price: signal.unlock_price,
+          status: signal.status as 'active' | 'resolved' | 'cancelled',
+          resolution_result: signal.resolution_result,
+          resolution_notes: signal.resolution_notes,
+          created_at: signal.created_at,
+          updated_at: signal.updated_at,
+          profiles: validProfiles
         };
       });
       
-      return transformedData as Signal[];
+      return transformedData;
     },
   });
 };
