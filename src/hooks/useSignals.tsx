@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -85,19 +86,18 @@ export const useSignals = () => {
         const profilesData = signal.profiles;
         let validProfiles: { username: string; alpha_score: number } | null = null;
         
-        // Type guard to ensure profilesData is not null and is an object
-        if (profilesData !== null && typeof profilesData === 'object') {
-          // Check if it's not an error object and has the required properties
-          if (!('error' in profilesData) && 
-              'username' in profilesData && 
-              'alpha_score' in profilesData &&
-              typeof profilesData.username === 'string' &&
-              typeof profilesData.alpha_score === 'number') {
-            validProfiles = {
-              username: profilesData.username,
-              alpha_score: profilesData.alpha_score
-            };
-          }
+        // Comprehensive type guard with proper null handling
+        if (profilesData && 
+            typeof profilesData === 'object' && 
+            !('error' in profilesData) && 
+            'username' in profilesData && 
+            'alpha_score' in profilesData &&
+            typeof profilesData.username === 'string' &&
+            typeof profilesData.alpha_score === 'number') {
+          validProfiles = {
+            username: profilesData.username,
+            alpha_score: profilesData.alpha_score
+          };
         }
         
         return {
