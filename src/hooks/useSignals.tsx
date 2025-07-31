@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -82,7 +83,10 @@ export const useSignals = () => {
       // Transform the data to handle potential profile errors
       const transformedData = data.map(signal => ({
         ...signal,
-        profiles: signal.profiles && typeof signal.profiles === 'object' && 'username' in signal.profiles 
+        profiles: signal.profiles && 
+                 typeof signal.profiles === 'object' && 
+                 signal.profiles !== null &&
+                 'username' in signal.profiles 
           ? signal.profiles 
           : null
       }));
