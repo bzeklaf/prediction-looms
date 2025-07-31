@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,7 +20,7 @@ interface Signal {
   unlockPrice: number;
   alphaScore: number;
   timeHorizon: string;
-  status: "active" | "resolved" | "expired";
+  status: "active" | "resolved" | "cancelled";
   accuracy?: number;
 }
 
@@ -44,7 +45,7 @@ export const SignalCard = ({ signal, onUnlock, onView, className }: SignalCardPr
     switch (status) {
       case "active": return "bg-success/20 text-success border-success/30";
       case "resolved": return "bg-muted/20 text-muted-foreground border-muted/30";
-      case "expired": return "bg-destructive/20 text-destructive border-destructive/30";
+      case "cancelled": return "bg-destructive/20 text-destructive border-destructive/30";
       default: return "bg-muted/20 text-muted-foreground border-muted/30";
     }
   };

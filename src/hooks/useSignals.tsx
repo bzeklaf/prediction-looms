@@ -58,7 +58,7 @@ export const useSignals = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as Signal[];
+      return data;
     },
   });
 };

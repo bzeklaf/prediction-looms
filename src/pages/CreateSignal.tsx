@@ -60,18 +60,11 @@ export const CreateSignal = () => {
     if (page === 'dashboard') navigate('/dashboard');
   };
 
-  const handleAuthClick = () => {
-    if (!user) {
-      setShowAuthModal(true);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-background">
       <Navigation 
         currentPage={currentPage}
         onNavigate={handleNavigate}
-        onAuthClick={handleAuthClick}
       />
       
       <main className="container mx-auto px-4 py-8">
