@@ -14,13 +14,146 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          accuracy_rate: number | null
+          alpha_score: number | null
+          avatar_url: string | null
+          bio: string | null
+          created_at: string | null
+          id: string
+          total_signals: number | null
+          updated_at: string | null
+          username: string | null
+        }
+        Insert: {
+          accuracy_rate?: number | null
+          alpha_score?: number | null
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          id: string
+          total_signals?: number | null
+          updated_at?: string | null
+          username?: string | null
+        }
+        Update: {
+          accuracy_rate?: number | null
+          alpha_score?: number | null
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          id?: string
+          total_signals?: number | null
+          updated_at?: string | null
+          username?: string | null
+        }
+        Relationships: []
+      }
+      signal_unlocks: {
+        Row: {
+          id: string
+          signal_id: string
+          unlock_price: number
+          unlocked_at: string | null
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          signal_id: string
+          unlock_price: number
+          unlocked_at?: string | null
+          user_id: string
+        }
+        Update: {
+          id?: string
+          signal_id?: string
+          unlock_price?: number
+          unlocked_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "signal_unlocks_signal_id_fkey"
+            columns: ["signal_id"]
+            isOneToOne: false
+            referencedRelation: "signals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      signals: {
+        Row: {
+          category: string
+          confidence: number
+          created_at: string | null
+          creator_id: string
+          description: string
+          id: string
+          is_locked: boolean | null
+          prediction: string
+          resolution_notes: string | null
+          resolution_result: boolean | null
+          resolution_time: string
+          stake_amount: number
+          stake_token: string
+          status: string
+          time_horizon: string
+          title: string
+          unlock_price: number
+          updated_at: string | null
+        }
+        Insert: {
+          category: string
+          confidence: number
+          created_at?: string | null
+          creator_id: string
+          description: string
+          id?: string
+          is_locked?: boolean | null
+          prediction: string
+          resolution_notes?: string | null
+          resolution_result?: boolean | null
+          resolution_time: string
+          stake_amount: number
+          stake_token?: string
+          status?: string
+          time_horizon: string
+          title: string
+          unlock_price: number
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          confidence?: number
+          created_at?: string | null
+          creator_id?: string
+          description?: string
+          id?: string
+          is_locked?: boolean | null
+          prediction?: string
+          resolution_notes?: string | null
+          resolution_result?: boolean | null
+          resolution_time?: string
+          stake_amount?: number
+          stake_token?: string
+          status?: string
+          time_horizon?: string
+          title?: string
+          unlock_price?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      update_user_alpha_score: {
+        Args: { user_uuid: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

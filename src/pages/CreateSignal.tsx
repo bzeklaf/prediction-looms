@@ -1,316 +1,296 @@
 
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, DollarSign, TrendingUp, Clock, AlertTriangle } from "lucide-react";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Navigation } from '@/components/Navigation';
+import { AuthModal } from '@/components/AuthModal';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Slider } from '@/components/ui/slider';
+import { Badge } from '@/components/ui/badge';
+import { useCreateSignal } from '@/hooks/useSignals';
+import { useAuth } from '@/hooks/useAuth';
 
 export const CreateSignal = () => {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [prediction, setPrediction] = useState("");
-  const [category, setCategory] = useState("");
-  const [confidence, setConfidence] = useState(50);
-  const [stake, setStake] = useState("");
-  const [stakeToken, setStakeToken] = useState("USDC");
-  const [resolutionDate, setResolutionDate] = useState<Date>();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const createSignal = useCreateSignal();
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [currentPage, setCurrentPage] = useState('create');
+
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    prediction: '',
+    confidence: 70,
+    stake_amount: 100,
+    stake_token: 'USDC',
+    category: 'crypto' as 'crypto' | 'macro' | 'rwa',
+    time_horizon: '1 week',
+    resolution_time: '',
+    unlock_price: 10,
+  });
+
+  const handleInputChange = (field: string, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!resolutionDate) return;
+    
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
 
-    setIsSubmitting(true);
-    
-    // Simulate submission
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    console.log("Signal submitted:", {
-      title,
-      description,
-      prediction,
-      category,
-      confidence,
-      stake,
-      stakeToken,
-      resolutionDate,
-    });
-    
-    setIsSubmitting(false);
-    // In real app, would redirect to signal page or dashboard
+    try {
+      await createSignal.mutateAsync(formData);
+      navigate('/market');
+    } catch (error) {
+      console.error('Error creating signal:', error);
+    }
   };
 
-  const isFormValid = title && description && prediction && category && stake && resolutionDate;
-  const estimatedUnlockPrice = Math.round((parseFloat(stake) || 0) * 0.1 * 100) / 100;
+  const handleNavigate = (page: string) => {
+    setCurrentPage(page);
+    if (page === 'market') navigate('/market');
+    if (page === 'dashboard') navigate('/dashboard');
+  };
+
+  const handleAuthClick = () => {
+    if (!user) {
+      setShowAuthModal(true);
+    }
+  };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="text-center space-y-4">
-          <h1 className="text-3xl font-bold bg-gradient-alpha bg-clip-text text-transparent">
-            Create New Signal
-          </h1>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            Submit your prediction with confidence and stake. Earn from unlock fees and build your Alpha Score.
-          </p>
-        </div>
+    <div className="min-h-screen bg-background">
+      <Navigation 
+        currentPage={currentPage}
+        onNavigate={handleNavigate}
+        onAuthClick={handleAuthClick}
+      />
+      
+      <main className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold mb-2">Create New Signal</h1>
+            <p className="text-muted-foreground">
+              Share your prediction and earn from successful outcomes
+            </p>
+          </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Main Form */}
-            <div className="lg:col-span-2 space-y-6">
-              <Card className="bg-card/50 border-border/50">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <TrendingUp className="w-5 h-5 text-primary" />
-                    Signal Details
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="title">Title</Label>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Form */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Signal Details</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div>
+                    <Label htmlFor="title">Title *</Label>
                     <Input
                       id="title"
-                      placeholder="e.g., ETH to Break $3,200 in 7 Days"
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                      className="bg-muted/30"
+                      value={formData.title}
+                      onChange={(e) => handleInputChange('title', e.target.value)}
+                      placeholder="e.g., BTC will reach $100k by end of year"
+                      required
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="description">Description</Label>
+                  <div>
+                    <Label htmlFor="description">Description *</Label>
                     <Textarea
                       id="description"
-                      placeholder="Explain your reasoning, methodology, and key factors..."
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      className="bg-muted/30 min-h-[100px]"
+                      value={formData.description}
+                      onChange={(e) => handleInputChange('description', e.target.value)}
+                      placeholder="Explain the context and reasoning behind your prediction..."
+                      required
+                      rows={3}
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="prediction">Specific Prediction</Label>
+                  <div>
+                    <Label htmlFor="prediction">Prediction Details *</Label>
                     <Textarea
                       id="prediction"
-                      placeholder="e.g., ETH/USD > $3,200 by 2024-08-07 23:59 UTC"
-                      value={prediction}
-                      onChange={(e) => setPrediction(e.target.value)}
-                      className="bg-muted/30"
+                      value={formData.prediction}
+                      onChange={(e) => handleInputChange('prediction', e.target.value)}
+                      placeholder="Detailed prediction with specific outcomes and conditions..."
+                      required
+                      rows={4}
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Category</Label>
-                      <Select value={category} onValueChange={setCategory}>
-                        <SelectTrigger className="bg-muted/30">
-                          <SelectValue placeholder="Select category" />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Category *</Label>
+                      <Select
+                        value={formData.category}
+                        onValueChange={(value) => handleInputChange('category', value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="crypto">Crypto</SelectItem>
                           <SelectItem value="macro">Macro</SelectItem>
-                          <SelectItem value="rwa">Real World Assets</SelectItem>
+                          <SelectItem value="rwa">RWA</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
 
-                    <div className="space-y-2">
-                      <Label>Resolution Date</Label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              "w-full justify-start text-left font-normal bg-muted/30",
-                              !resolutionDate && "text-muted-foreground"
-                            )}
-                          >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {resolutionDate ? format(resolutionDate, "PPP") : "Pick a date"}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
-                          <Calendar
-                            mode="single"
-                            selected={resolutionDate}
-                            onSelect={setResolutionDate}
-                            initialFocus
-                            disabled={(date) => date < new Date()}
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-card/50 border-border/50">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <DollarSign className="w-5 h-5 text-success" />
-                    Confidence & Stake
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Confidence Level: {confidence}%</Label>
-                    <div className="px-3">
-                      <input
-                        type="range"
-                        min="1"
-                        max="99"
-                        value={confidence}
-                        onChange={(e) => setConfidence(parseInt(e.target.value))}
-                        className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer slider"
-                      />
-                    </div>
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>Low confidence</span>
-                      <span>High confidence</span>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="stake">Stake Amount</Label>
-                      <Input
-                        id="stake"
-                        type="number"
-                        placeholder="0.00"
-                        value={stake}
-                        onChange={(e) => setStake(e.target.value)}
-                        className="bg-muted/30"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>Stake Token</Label>
-                      <Select value={stakeToken} onValueChange={setStakeToken}>
-                        <SelectTrigger className="bg-muted/30">
+                    <div>
+                      <Label>Time Horizon *</Label>
+                      <Select
+                        value={formData.time_horizon}
+                        onValueChange={(value) => handleInputChange('time_horizon', value)}
+                      >
+                        <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="USDC">USDC</SelectItem>
-                          <SelectItem value="USDT">USDT</SelectItem>
-                          <SelectItem value="ETH">ETH</SelectItem>
-                          <SelectItem value="WBTC">WBTC</SelectItem>
+                          <SelectItem value="1 day">1 Day</SelectItem>
+                          <SelectItem value="1 week">1 Week</SelectItem>
+                          <SelectItem value="1 month">1 Month</SelectItem>
+                          <SelectItem value="3 months">3 Months</SelectItem>
+                          <SelectItem value="6 months">6 Months</SelectItem>
+                          <SelectItem value="1 year">1 Year</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            </div>
 
-            {/* Preview Sidebar */}
-            <div className="space-y-6">
-              <Card className="bg-card/50 border-border/50 sticky top-6">
-                <CardHeader>
-                  <CardTitle className="text-sm">Preview</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {category && (
-                    <Badge className={
-                      category === "crypto" ? "bg-primary text-primary-foreground" :
-                      category === "macro" ? "bg-warning text-warning-foreground" :
-                      "bg-success text-success-foreground"
-                    }>
-                      {category.toUpperCase()}
-                    </Badge>
-                  )}
+                  <div>
+                    <Label htmlFor="resolution_time">Resolution Date *</Label>
+                    <Input
+                      id="resolution_time"
+                      type="datetime-local"
+                      value={formData.resolution_time}
+                      onChange={(e) => handleInputChange('resolution_time', e.target.value)}
+                      required
+                    />
+                  </div>
 
-                  <div className="space-y-2">
-                    <h3 className="font-semibold text-sm">
-                      {title || "Signal Title"}
+                  <div>
+                    <Label>Confidence Level: {formData.confidence}%</Label>
+                    <div className="mt-2">
+                      <Slider
+                        value={[formData.confidence]}
+                        onValueChange={(value) => handleInputChange('confidence', value[0])}
+                        max={100}
+                        min={1}
+                        step={1}
+                        className="w-full"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="stake_amount">Stake Amount *</Label>
+                      <Input
+                        id="stake_amount"
+                        type="number"
+                        value={formData.stake_amount}
+                        onChange={(e) => handleInputChange('stake_amount', Number(e.target.value))}
+                        min="1"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="unlock_price">Unlock Price ($) *</Label>
+                      <Input
+                        id="unlock_price"
+                        type="number"
+                        value={formData.unlock_price}
+                        onChange={(e) => handleInputChange('unlock_price', Number(e.target.value))}
+                        min="1"
+                        step="0.01"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <Button 
+                    type="submit" 
+                    className="w-full"
+                    disabled={createSignal.isPending}
+                  >
+                    {createSignal.isPending ? 'Creating Signal...' : 'Create Signal'}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+
+            {/* Preview */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Preview</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex gap-2 mb-2">
+                      <Badge variant="outline">{formData.category.toUpperCase()}</Badge>
+                      <Badge variant="outline" className="text-success">
+                        {formData.confidence}% confidence
+                      </Badge>
+                    </div>
+                    <h3 className="font-semibold text-lg">
+                      {formData.title || 'Your signal title...'}
                     </h3>
-                    <p className="text-xs text-muted-foreground line-clamp-3">
-                      {description || "Signal description will appear here..."}
+                    <p className="text-sm text-muted-foreground">
+                      {formData.description || 'Your description will appear here...'}
                     </p>
                   </div>
 
-                  <Separator />
-
-                  <div className="space-y-3 text-xs">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Confidence</span>
-                      <span className="font-medium">{confidence}%</span>
+                  <div className="bg-muted/30 p-3 rounded border">
+                    <div className="text-sm font-medium mb-1">Prediction:</div>
+                    <div className="text-sm text-muted-foreground">
+                      {formData.prediction || 'Your detailed prediction will appear here...'}
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Stake</span>
-                      <span className="font-medium">{stake || "0"} {stakeToken}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Est. Unlock Price</span>
-                      <span className="font-medium">${estimatedUnlockPrice}</span>
-                    </div>
-                    {resolutionDate && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Resolution</span>
-                        <span className="font-medium">{format(resolutionDate, "MMM dd")}</span>
-                      </div>
-                    )}
                   </div>
 
-                  <Separator />
-
-                  <div className="bg-primary/5 p-3 rounded-lg border border-primary/20">
-                    <div className="flex items-start gap-2">
-                      <AlertTriangle className="w-4 h-4 text-primary mt-0.5" />
-                      <div className="text-xs">
-                        <div className="font-medium text-primary mb-1">Risk Notice</div>
-                        <p className="text-muted-foreground">
-                          Your stake will be locked until resolution. Incorrect predictions may result in partial stake loss.
-                        </p>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <div className="text-muted-foreground">Stake</div>
+                      <div className="font-semibold">{formData.stake_amount} {formData.stake_token}</div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground">Unlock Price</div>
+                      <div className="font-semibold">${formData.unlock_price}</div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground">Time Horizon</div>
+                      <div className="font-semibold">{formData.time_horizon}</div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground">Resolution</div>
+                      <div className="font-semibold">
+                        {formData.resolution_time 
+                          ? new Date(formData.resolution_time).toLocaleDateString()
+                          : 'Not set'
+                        }
                       </div>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-
-          {/* Submit Button */}
-          <Card className="bg-card/50 border-border/50">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <h3 className="font-semibold">Ready to Submit?</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Your signal will be published immediately and available for unlock
-                  </p>
                 </div>
-                <Button 
-                  type="submit"
-                  variant="signal"
-                  size="lg"
-                  disabled={!isFormValid || isSubmitting}
-                  className="min-w-[140px]"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Clock className="w-4 h-4 mr-2 animate-spin" />
-                      Submitting...
-                    </>
-                  ) : (
-                    "Submit Signal"
-                  )}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </form>
-      </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </main>
+
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+      />
     </div>
   );
 };
