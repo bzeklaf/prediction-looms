@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -80,24 +79,19 @@ export const useSignals = () => {
 
       console.log('Signals fetched successfully:', data);
       
-      // Transform the data to handle potential profile errors
+      // Transform the data with simplified profile handling
       const transformedData: Signal[] = data.map(signal => {
-        // Check if profiles is valid and has the expected structure
-        const profilesData = signal.profiles;
         let validProfiles: { username: string; alpha_score: number } | null = null;
         
-        // Comprehensive type guard with proper null handling
-        if (profilesData && 
-            typeof profilesData === 'object' && 
-            !('error' in profilesData) && 
-            'username' in profilesData && 
-            'alpha_score' in profilesData &&
-            typeof profilesData.username === 'string' &&
-            typeof profilesData.alpha_score === 'number') {
-          validProfiles = {
-            username: profilesData.username,
-            alpha_score: profilesData.alpha_score
-          };
+        // Check if profiles exists and has valid data
+        if (signal.profiles) {
+          const profile = signal.profiles as any;
+          if (profile.username && typeof profile.alpha_score === 'number') {
+            validProfiles = {
+              username: profile.username,
+              alpha_score: profile.alpha_score
+            };
+          }
         }
         
         return {
