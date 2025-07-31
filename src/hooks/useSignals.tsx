@@ -25,7 +25,7 @@ export interface Signal {
   profiles?: {
     username: string;
     alpha_score: number;
-  };
+  } | null;
 }
 
 export interface CreateSignalData {
@@ -45,6 +45,9 @@ export const useSignals = () => {
   return useQuery({
     queryKey: ['signals'],
     queryFn: async () => {
+      console.log('Fetching signals...');
+      
+      // First try the join query
       const { data, error } = await supabase
         .from('signals')
         .select(`
@@ -56,7 +59,25 @@ export const useSignals = () => {
         `)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching signals with profiles:', error);
+        
+        // Fallback: fetch signals without profiles join
+        const { data: signalsOnly, error: signalsError } = await supabase
+          .from('signals')
+          .select('*')
+          .order('created_at', { ascending: false });
+          
+        if (signalsError) throw signalsError;
+        
+        // Return signals with null profiles
+        return signalsOnly.map(signal => ({
+          ...signal,
+          profiles: null
+        })) as Signal[];
+      }
+
+      console.log('Signals fetched successfully:', data);
       return data as Signal[];
     },
   });
