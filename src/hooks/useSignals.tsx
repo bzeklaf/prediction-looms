@@ -81,15 +81,19 @@ export const useSignals = () => {
       console.log('Signals fetched successfully:', data);
       
       // Transform the data to handle potential profile errors
-      const transformedData = data.map(signal => ({
-        ...signal,
-        profiles: signal.profiles && 
-                 typeof signal.profiles === 'object' && 
-                 signal.profiles !== null &&
-                 'username' in signal.profiles 
-          ? signal.profiles 
-          : null
-      }));
+      const transformedData = data.map(signal => {
+        // Check if profiles is valid
+        const hasValidProfiles = signal.profiles && 
+                                typeof signal.profiles === 'object' && 
+                                signal.profiles !== null &&
+                                !('error' in signal.profiles) &&
+                                'username' in signal.profiles;
+        
+        return {
+          ...signal,
+          profiles: hasValidProfiles ? signal.profiles : null
+        };
+      });
       
       return transformedData as Signal[];
     },
