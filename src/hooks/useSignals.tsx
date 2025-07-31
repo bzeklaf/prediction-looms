@@ -78,7 +78,16 @@ export const useSignals = () => {
       }
 
       console.log('Signals fetched successfully:', data);
-      return data as Signal[];
+      
+      // Transform the data to handle potential profile errors
+      const transformedData = data.map(signal => ({
+        ...signal,
+        profiles: signal.profiles && typeof signal.profiles === 'object' && 'username' in signal.profiles 
+          ? signal.profiles 
+          : null
+      }));
+      
+      return transformedData as Signal[];
     },
   });
 };
